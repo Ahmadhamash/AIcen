@@ -50,16 +50,24 @@ async def twilio_voice_webhook(request: Request):
     back to our /twilio/stream WebSocket.
     """
     host = request.headers.get("host", "localhost:8000")
-    protocol = "wss" if "https" in str(request.url) else "ws"
+
+    # Railway/Render proxy HTTPS→HTTP internally, so check X-Forwarded-Proto
+    forwarded_proto = request.headers.get("x-forwarded-proto", "")
+    is_secure = "https" in forwarded_proto or "https" in str(request.url)
+    protocol = "wss" if is_secure else "ws"
+
+    # Extract caller phone from Twilio POST form data
+    form = await request.form()
+    caller = form.get("From", "unknown")
 
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
         <Stream url="{protocol}://{host}/twilio/stream">
-            <Parameter name="caller" value="{{{{From}}}}" />
+            <Parameter name="caller" value="{caller}" />
         </Stream>
     </Connect>
-</Response>"""
+</Response>
     return Response(content=twiml, media_type="application/xml")
 
 
