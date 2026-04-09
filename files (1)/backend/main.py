@@ -67,7 +67,7 @@ async def twilio_voice_webhook(request: Request):
             <Parameter name="caller" value="{caller}" />
         </Stream>
     </Connect>
-</Response>
+</Response>"""
     return Response(content=twiml, media_type="application/xml")
 
 
@@ -76,10 +76,7 @@ async def twilio_voice_webhook(request: Request):
 # ────────────────────────────────────────────
 @app.websocket("/twilio/stream")
 async def twilio_media_stream(ws: WebSocket):
-    """
-    Twilio opens this WebSocket and streams raw audio (mulaw 8kHz).
-    We relay it to Gemini Live and pipe Gemini's audio back.
-    """
+    """Twilio WS handler - relays audio between Twilio and Gemini."""
     await ws.accept()
     logger.info("Twilio stream connected")
 
